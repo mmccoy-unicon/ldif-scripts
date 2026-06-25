@@ -16,6 +16,7 @@ outReportName = "attribute_usage_report.csv"
 outHistogramFile = "user_attribute_histogram.png"
 
 def merge_schema_and_usage(schema_csv, usage_csv, output_csv):
+    print(f"Consolidating usage report and schema data")
     df_schema = pd.read_csv(schema_csv)
     df_usage = pd.read_csv(usage_csv)
     df_usage.rename(columns={df_usage.columns[0]: 'NAME'}, inplace=True)
@@ -32,7 +33,7 @@ def merge_schema_and_usage(schema_csv, usage_csv, output_csv):
 
     # Export to a final consolidated CSV
     df_master.to_csv(output_csv, index=False)
-    print(f"Master consolidation complete! Saved to {output_csv}")
+    print(f"Data consolidation complete! Saved to {output_csv}")
 
 
 def ldif_to_dataframe(ldif_path):
@@ -60,8 +61,8 @@ usage_report = pd.DataFrame({
 })
 usage_report.to_csv(outReportRaw)
 print(f"Analyzed {len(df)} total users. Report saved in {outReportRaw}")
-print("Most populated attributes:")
-print(usage_report.head(20))
+# print("Most populated attributes:")
+# print(usage_report.head(20))
 merge_schema_and_usage(schema_report, outReportRaw, outReportName)
 
 ## generate histogram showing attribute density across all users
@@ -72,5 +73,6 @@ plt.title('Distribution of Attribute Density Per User Record', fontsize=14)
 plt.xlabel('Number of Unique Attributes Populated', fontsize=12)
 plt.ylabel('Number of Users (Frequency)', fontsize=12)
 plt.grid(axis='y', linestyle='--', alpha=0.7)
-print(f"Saving plot to {outHistogramFile}")
+print(f"Generating histogram plot")
 plt.savefig(outHistogramFile, dpi=300)
+print(f"Plot data saved to {outHistogramFile}")
