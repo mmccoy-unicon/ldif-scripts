@@ -42,6 +42,11 @@ def ldif_to_dataframe(ldif_path):
         parser = LDIFParser(f)
         # Loop through each entry in the LDIF file
         for dn, entry in parser.parse():
+            object_classes = [oc.lower() for oc in entry.get('objectClass', [])]
+            # (Adjust 'person' to 'inetOrgPerson' or 'posixAccount' if needed)
+            if 'person' not in object_classes:
+                continue  # Skip groups, OUs, and system configurations
+                
             # ldif3 returns data as bytes; decode it to strings
             record = {"dn": dn}
             for attr, values in entry.items():
