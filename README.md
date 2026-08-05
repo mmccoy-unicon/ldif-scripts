@@ -5,17 +5,27 @@
 - Python3 with the following modules:
   - matplotlib
   - pandas
+  - ldif3
 
 ### Setup python with a virtual environment and install modules
+
+Note: use a venv instance instead of the system-wide installation of Python, so that 
+you can install these modules without conflicting with the system-installed version of Python.
+
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install pandas
+python3 -m pip install matplotlib
 python3 -m pip install ldif3
 ```
 
-### enable the venv later
+### enable the venv
+
+Note: this must be done once per login session prior to running the other Python
+scripts. This will ensure the correct venv instance of Python is used with the
+installed modules.
 
 ```bash
 source .venv/bin/activate
