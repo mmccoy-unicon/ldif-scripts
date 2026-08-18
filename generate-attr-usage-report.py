@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import tempfile
+import argparse
 import base64
 import pandas as pd
 from ldif3 import LDIFParser
@@ -11,12 +13,9 @@ if not hasattr(base64, "decodestring"):
 
 inputFile = "users.ldif"
 schema_report = "schema_report.csv"
-outReportRaw = "attribute_usage_report_raw.csv"
-outReportName = "attribute_usage_report.csv"
-outHistogramFile = "user_attribute_histogram.png"
 
 def merge_schema_and_usage(schema_csv, usage_csv, output_csv):
-    print(f"Consolidating usage report and schema data")
+    print("Consolidating usage report and schema data")
     df_schema = pd.read_csv(schema_csv)
     df_usage = pd.read_csv(usage_csv)
     df_usage.rename(columns={df_usage.columns[0]: 'NAME'}, inplace=True)
@@ -56,28 +55,47 @@ def ldif_to_dataframe(ldif_path):
             records.append(record)
     return pd.DataFrame(records)
 
-df = ldif_to_dataframe(inputFile)
+def generate_reports(inputFile):
+    outReportRaw = inputFile + "-raw.csv"
+    outReportName = inputFile + "-report.csv"
+    outHistogramFile = inputFile + "-histogram.png"
 
-## generate report showing attribute usage percentages
-attribute_counts = df.notnull().sum().sort_values(ascending=False)
-usage_report = pd.DataFrame({
-    'Active Entries': attribute_counts,
-    'Fill Rate (%)': (attribute_counts / len(df)) * 100
-})
-usage_report.to_csv(outReportRaw)
-print(f"Analyzed {len(df)} total users. Report saved in {outReportRaw}")
-# print("Most populated attributes:")
-# print(usage_report.head(20))
-merge_schema_and_usage(schema_report, outReportRaw, outReportName)
+    df = ldif_to_dataframe(inputFile)
 
-## generate histogram showing attribute density across all users
-attributes_per_user = df.notnull().sum(axis=1)
-plt.figure(figsize=(10, 6))
-plt.hist(attributes_per_user, bins=range(attributes_per_user.min(), attributes_per_user.max() + 2), edgecolor='black', color='teal', alpha=0.7)
-plt.title('Distribution of Attribute Density Per User Record', fontsize=14)
-plt.xlabel('Number of Unique Attributes Populated', fontsize=12)
-plt.ylabel('Number of Users (Frequency)', fontsize=12)
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-print(f"Generating histogram plot")
-plt.savefig(outHistogramFile, dpi=300)
-print(f"Plot data saved to {outHistogramFile}")
+    ## generate report showing attribute usage percentages
+    attribute_counts = df.notnull().sum().sort_values(ascending=False)
+    usage_report = pd.DataFrame({
+        'Active Entries': attribute_counts,
+        'Fill Rate (%)': (attribute_counts / len(df)) * 100
+    })
+    usage_report.to_csv(outReportRaw)
+    print(f"Analyzed {len(df)} total users. Report saved in {outReportRaw}")
+    # print("Most populated attributes:")
+    # print(usage_report.head(20))
+    merge_schema_and_usage(schema_report, outReportRaw, outReportName)
+
+    ## generate histogram showing attribute density across all users
+    attributes_per_user = df.notnull().sum(axis=1)
+    plt.figure(figsize=(10, 6))
+    plt.hist(attributes_per_user, bins=range(attributes_per_user.min(), attributes_per_user.max() + 2), edgecolor='black', color='teal', alpha=0.7)
+    plt.title('Distribution of Attribute Density Per User Record', fontsize=14)
+    plt.xlabel('Number of Unique Attributes Populated', fontsize=12)
+    plt.ylabel('Number of Users (Frequency)', fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    print("Generating histogram plot")
+    plt.savefig(outHistogramFile, dpi=300)
+    print(f"Plot data saved to {outHistogramFile}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog="generate-attr-usage-report.py",
+        description="Generate a report on LDAP attribute usage from an LDIF export",
+        epilog="",
+    )
+    parser.add_argument(
+        "filename",
+        help="LDIF file to read user data",
+    )
+    args = parser.parse_args()
+    generate_reports(args.filename)
+
